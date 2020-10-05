@@ -25,15 +25,14 @@ function preload() {
 }
 
 function setup() {
-
-  startT = millis();
   // Canvas Creation
   createCanvas(501, 1001);
-  frameRate(10);
-  background(255);
+  frameRate(0.5);
+  background(200);
+  fill(200);
   circle(249, 35, 20);
   circle(249, 963, 20);
-  fill(100, 100, 100);
+
 
   let rowCount = table.getRowCount();
   let counter = 0;
@@ -43,7 +42,7 @@ function setup() {
       shotY[counter] = table.getNum(i, 16);
       shotTeam[counter] = table.getString(i, 7);
       shotStatus[counter] = table.getString(i, 11);
-      console.log(table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11))
+      console.log(table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
       shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11));
       counter++;
     }
@@ -51,6 +50,11 @@ function setup() {
 }
 
 function draw() {
+  stroke(0);
+  fill(200);
+  circle(249, 35, 20);
+  circle(249, 963, 20);
+
   if (drawCounter >= 1) {
     shots[drawCounter - 1].update();
     for (i = 0; i < drawCounter; i++) {
@@ -60,10 +64,9 @@ function draw() {
 
   if (drawCounter <= (shots.length - 1)) {
     // shots[drawCounter].visualize();
-    strokeWeight(1);
     shots[drawCounter].drawLines();
     shots[drawCounter].drawEllipses();
-    console.log("The drawCounter count: " + drawCounter);
+    // console.log("The drawCounter count: " + drawCounter);
     // Create update method to update fadeCounter
     if (drawCounter >= 5) {
       // shots[drawCounter - 5].update();
@@ -71,10 +74,7 @@ function draw() {
     }
     drawCounter++;
   }
-  // while (count >= 1) {
-  //   console.log("Count: " + count);
-  //   count--;
-  // }
+
 }
 
 class Shot {
@@ -84,9 +84,9 @@ class Shot {
     this.shotTeam = shotTeam;
     this.shotStatus = shotStatus;
     let xMap = map(this.shotX, 0, 50, 0, width);
-    console.log("xMap: " + xMap);
+    // console.log("xMap: " + xMap);
     let yMap = map(this.shotY, 94, 0, 0, height);
-    console.log("yMap: " + yMap);
+    // console.log("yMap: " + yMap);
     this.xShotLocation = Math.floor(xMap);
     this.xShotLocation = Math.ceil(this.xShotLocation);
     this.xShotLocation = Math.round(this.xShotLocation);
@@ -96,15 +96,16 @@ class Shot {
   }
 
   drawEllipses() {
+    strokeWeight(0.5);
     if (this.shotTeam === "GSW") {
-      stroke(255, 255, 0);
+      stroke(255, 215, 0);
       if (this.shotStatus === "made") {
-        fill(255, 255, 0);
+        fill(255, 215, 0);
       } else {
         fill(0);
       }
     } else {
-      // stroke(255, 0, 0);
+      stroke(255, 0, 0);
       if (this.shotStatus === "made") {
         fill(255, 0, 0);
       } else {
@@ -112,23 +113,24 @@ class Shot {
       }
     }
     ellipse(this.xShotLocation, this.yShotLocation, 10, 10);
-    console.log("Ellipse X: " + this.xShotLocation + ", Ellipse Y: " + this.yShotLocation);
+    // console.log("Ellipse X: " + this.xShotLocation + ", Ellipse Y: " + this.yShotLocation);
   }
 
   drawLines() {
+    strokeWeight(0.5);
     if (this.shotTeam === "GSW") {
       if (this.shotStatus === "made") {
-        stroke(255, 255, 0, fade[fadeCounter]);
+        stroke(255, 215, 0, 255);
       } else {
-        stroke(0, fade[fadeCounter]);
+        stroke(0, 255);
       }
       line(this.xShotLocation, this.yShotLocation, 249, 963);
     } else {
       // stroke(255, 0, 0);
       if (this.shotStatus === "made") {
-        stroke(255, 0, 0, fade[fadeCounter]);
+        stroke(255, 0, 0, 255);
       } else {
-        stroke(0, fade[fadeCounter]);
+        stroke(0, 255);
       }
       line(this.xShotLocation, this.yShotLocation, 249, 35);
     }
@@ -137,16 +139,13 @@ class Shot {
   update() {
 
     // Build the line as a property of the object and then delete it.
-    strokeWeight(2);
-    stroke(255, 255, 255, 255);
+    strokeWeight(3);
+    stroke(200, 200, 200, 255);
     if (this.shotTeam === "GSW") {
       line(this.xShotLocation, this.yShotLocation, 249, 963);
     } else {
       line(this.xShotLocation, this.yShotLocation, 249, 35);
     }
 
-    circle(249, 35, 20);
-    circle(249, 963, 20);
-    fill(100, 100, 100);
   }
 }
