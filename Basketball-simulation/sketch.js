@@ -1,16 +1,9 @@
 let csvLines;
-let shotX = [];
-let shotY = [];
-let shotTeam = [];
-let shotStatus = [];
-let shot;
 let shots = [];
-let lines = [];
-var theCourt;
-let fade = [];
-let fadeCounter = 255;
 let drawCounter = 0;
-var count = 9999;
+let cleFinalScore;
+let gswFinalScore;
+var soundEffect;
 
 function preload() {
 
@@ -21,72 +14,80 @@ function preload() {
    */
 
   table = loadTable("nba_gsw_cle.csv", "csv", "header");
-  // csvLines = loadStrings('nba_gsw_cle.csv');
+  // soundEffect = loadSound("Swish.mp3");
 }
 
 function setup() {
   // Canvas Creation
-  createCanvas(501, 1001);
-  frameRate(0.5);
-  background(200);
+  createCanvas(1001, 1001);
+  frameRate(10);
+  background(0);
   fill(200);
+  rect(0, 0, 501, 1001)
   circle(249, 35, 20);
   circle(249, 963, 20);
-
+  fill(255);
+  rect(502, 0, 501, 1001)
 
   let rowCount = table.getRowCount();
   let counter = 0;
   for (let i = 0; i < rowCount; i++) {
     if (table.getString(i, 8) === "shot" || table.getString(i, 8) === "miss") {
-      shotX[counter] = table.getNum(i, 15);
-      shotY[counter] = table.getNum(i, 16);
-      shotTeam[counter] = table.getString(i, 7);
-      shotStatus[counter] = table.getString(i, 11);
-      console.log(table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
-      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11));
+      console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
+      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2));
       counter++;
     }
+    cleFinalScore = table.getNum(i, 2);
+    gswFinalScore = table.getNum(i, 1);
   }
 }
 
 function draw() {
+  // Redraw basketball hoops
+  background(0); 
   stroke(0);
   fill(200);
+  rect(0, 0, 501, 1001)
   circle(249, 35, 20);
   circle(249, 963, 20);
+  fill(255);
+  rect(502, 0, 501, 1001)
 
+  // Redraw every previous ellipse
   if (drawCounter >= 1) {
-    shots[drawCounter - 1].update();
+    shots[drawCounter - 1].updateCourt();
     for (i = 0; i < drawCounter; i++) {
       shots[i].drawEllipses();
     }
   }
 
+  // Draw new ellipse with line
   if (drawCounter <= (shots.length - 1)) {
-    // shots[drawCounter].visualize();
     shots[drawCounter].drawLines();
     shots[drawCounter].drawEllipses();
+    shots[drawCounter].updateScoreBoard();
     // console.log("The drawCounter count: " + drawCounter);
-    // Create update method to update fadeCounter
-    if (drawCounter >= 5) {
-      // shots[drawCounter - 5].update();
-      // background(240);
-    }
     drawCounter++;
+  } else {
+    drawScoreBoard(cleFinalScore, gswFinalScore);
   }
 
 }
 
 class Shot {
-  constructor(shotX, shotY, shotTeam, shotStatus) {
+  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore) {
     this.shotX = shotX;
     this.shotY = shotY;
     this.shotTeam = shotTeam;
     this.shotStatus = shotStatus;
-    let xMap = map(this.shotX, 0, 50, 0, width);
+    this.gswScore = gswScore;
+    this.cleScore = cleScore;
+    let xMap = map(this.shotX, 0, 50, 0, 501);
     // console.log("xMap: " + xMap);
-    let yMap = map(this.shotY, 94, 0, 0, height);
+    let yMap = map(this.shotY, 94, 0, 0, 1001);
     // console.log("yMap: " + yMap);
+
+    // Process to change float numbers to integer
     this.xShotLocation = Math.floor(xMap);
     this.xShotLocation = Math.ceil(this.xShotLocation);
     this.xShotLocation = Math.round(this.xShotLocation);
@@ -96,11 +97,12 @@ class Shot {
   }
 
   drawEllipses() {
-    strokeWeight(0.5);
+    strokeWeight(2);
     if (this.shotTeam === "GSW") {
       stroke(255, 215, 0);
       if (this.shotStatus === "made") {
         fill(255, 215, 0);
+        // soundEffect.play();
       } else {
         fill(0);
       }
@@ -108,6 +110,7 @@ class Shot {
       stroke(255, 0, 0);
       if (this.shotStatus === "made") {
         fill(255, 0, 0);
+        // soundEffect.play();
       } else {
         fill(0);
       }
@@ -117,7 +120,7 @@ class Shot {
   }
 
   drawLines() {
-    strokeWeight(0.5);
+    strokeWeight(2);
     if (this.shotTeam === "GSW") {
       if (this.shotStatus === "made") {
         stroke(255, 215, 0, 255);
@@ -136,16 +139,35 @@ class Shot {
     }
   }
 
-  update() {
-
-    // Build the line as a property of the object and then delete it.
-    strokeWeight(3);
+  // Method to erase the previous lines
+  updateCourt() {
+    strokeWeight(4);
     stroke(200, 200, 200, 255);
     if (this.shotTeam === "GSW") {
       line(this.xShotLocation, this.yShotLocation, 249, 963);
     } else {
       line(this.xShotLocation, this.yShotLocation, 249, 35);
     }
-
   }
+
+  updateScoreBoard() {
+    drawScoreBoard(this.cleScore, this.gswScore);
+  }
+}
+
+function drawScoreBoard(cleScore, gswScore) {
+  textSize(50);
+  stroke(255, 0, 0);
+  fill(255, 0, 0);
+  text('CLE', 550, 450);
+  stroke(0);
+  fill(0);
+  text('-', 725, 450);
+  stroke(255, 215, 0);
+  fill(255, 215, 0);
+  text('GSW', 800, 450);
+  stroke(0);
+  fill(0);
+  text(cleScore, 550, 500);
+  text(gswScore, 800, 500);
 }
