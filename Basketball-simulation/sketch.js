@@ -1,4 +1,6 @@
 let csvLines;
+let xMaxSize = 1501;
+let yMaxSize = 1001;
 let shots = [];
 let drawCounter = 0;
 let cleFinalScore;
@@ -19,22 +21,22 @@ function preload() {
 
 function setup() {
   // Canvas Creation
-  createCanvas(1001, 1001);
-  frameRate(10);
+  createCanvas(xMaxSize, yMaxSize);
+  frameRate(0.75);
   background(0);
   fill(200);
-  rect(0, 0, 501, 1001)
+  rect(0, 0, 501, yMaxSize)
   circle(249, 35, 20);
   circle(249, 963, 20);
   fill(255);
-  rect(502, 0, 501, 1001)
+  rect(502, 0, xMaxSize, yMaxSize)
 
   let rowCount = table.getRowCount();
   let counter = 0;
   for (let i = 0; i < rowCount; i++) {
     if (table.getString(i, 8) === "shot" || table.getString(i, 8) === "miss") {
       console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
-      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2));
+      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17));
       counter++;
     }
     cleFinalScore = table.getNum(i, 2);
@@ -44,14 +46,14 @@ function setup() {
 
 function draw() {
   // Redraw basketball hoops
-  background(0); 
+  background(0);
   stroke(0);
   fill(200);
-  rect(0, 0, 501, 1001)
+  rect(0, 0, 501, yMaxSize)
   circle(249, 35, 20);
   circle(249, 963, 20);
   fill(255);
-  rect(502, 0, 501, 1001)
+  rect(502, 0, xMaxSize, yMaxSize)
 
   // Redraw every previous ellipse
   if (drawCounter >= 1) {
@@ -66,25 +68,26 @@ function draw() {
     shots[drawCounter].drawLines();
     shots[drawCounter].drawEllipses();
     shots[drawCounter].updateScoreBoard();
+    shots[drawCounter].drawPlayBoard();
     // console.log("The drawCounter count: " + drawCounter);
     drawCounter++;
   } else {
     drawScoreBoard(cleFinalScore, gswFinalScore);
   }
-
 }
 
 class Shot {
-  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore) {
+  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription) {
     this.shotX = shotX;
     this.shotY = shotY;
     this.shotTeam = shotTeam;
     this.shotStatus = shotStatus;
     this.gswScore = gswScore;
     this.cleScore = cleScore;
+    this.playDescription = playDescription;
     let xMap = map(this.shotX, 0, 50, 0, 501);
     // console.log("xMap: " + xMap);
-    let yMap = map(this.shotY, 94, 0, 0, 1001);
+    let yMap = map(this.shotY, 94, 0, 0, yMaxSize);
     // console.log("yMap: " + yMap);
 
     // Process to change float numbers to integer
@@ -153,21 +156,32 @@ class Shot {
   updateScoreBoard() {
     drawScoreBoard(this.cleScore, this.gswScore);
   }
+
+  drawPlayBoard() {
+    textSize(25);
+    stroke(0);
+    fill(0);
+    if (this.shotTeam === "GSW") {
+      text(this.playDescription, 550, 800);
+    } else {
+      text(this.playDescription, 550, 200);
+    }
+  }
 }
 
 function drawScoreBoard(cleScore, gswScore) {
   textSize(50);
   stroke(255, 0, 0);
   fill(255, 0, 0);
-  text('CLE', 550, 450);
+  text('CLE', 550, 500);
   stroke(0);
   fill(0);
-  text('-', 725, 450);
+  text('-', 725, 500);
   stroke(255, 215, 0);
   fill(255, 215, 0);
-  text('GSW', 800, 450);
+  text('GSW', 800, 500);
   stroke(0);
   fill(0);
-  text(cleScore, 550, 500);
-  text(gswScore, 800, 500);
+  text(cleScore, 550, 550);
+  text(gswScore, 800, 550);
 }
