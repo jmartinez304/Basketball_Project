@@ -5,7 +5,8 @@ let shots = [];
 let drawCounter = 0;
 let cleFinalScore;
 let gswFinalScore;
-var soundEffect;
+let slider;
+// var soundEffect;
 
 function preload() {
 
@@ -20,9 +21,13 @@ function preload() {
 }
 
 function setup() {
+  // Framerate slider
+  document.write("Control framerate:");
+  slider = createSlider(0.25, 7, 0.25, 0.40);
+
   // Canvas Creation
   createCanvas(xMaxSize, yMaxSize);
-  frameRate(0.75);
+  frameRate(slider.value());
   background(0);
   fill(200);
   rect(0, 0, 501, yMaxSize)
@@ -45,6 +50,9 @@ function setup() {
 }
 
 function draw() {
+  // Framerate can be adjusted by slider each frame
+  frameRate(slider.value());
+
   // Redraw basketball hoops
   background(0);
   stroke(0);
