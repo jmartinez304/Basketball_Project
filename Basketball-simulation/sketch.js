@@ -22,8 +22,34 @@ function preload() {
 
 function setup() {
   // Framerate slider
-  document.write("Control framerate:");
-  slider = createSlider(0.25, 7, 0.25, 0.40);
+  document.write("Control framerate: ");
+  slider = createSlider(0.25, 5, 0.25, 0.25);
+
+  // Playback buttons
+
+  // Reset
+  document.write(" | ");
+  document.write("Reset Game: ");
+  var resetButton = createButton("reset");
+  resetButton.mousePressed(resetGame);
+
+  // Back
+  document.write(" | ");
+  document.write("Back: ");
+  var resetButton = createButton("back");
+  resetButton.mousePressed(rewind);
+
+  // Forward
+  document.write(" | ");
+  document.write("Forward: ");
+  var resetButton = createButton("forward");
+  resetButton.mousePressed(forward);
+
+  // Forward
+  document.write(" | ");
+  document.write("End Game: ");
+  var resetButton = createButton("end");
+  resetButton.mousePressed(endGame);
 
   // Canvas Creation
   createCanvas(xMaxSize, yMaxSize);
@@ -192,4 +218,20 @@ function drawScoreBoard(cleScore, gswScore) {
   fill(0);
   text(cleScore, 550, 550);
   text(gswScore, 800, 550);
+}
+
+function resetGame() {
+  drawCounter = 0;
+}
+
+function rewind() {
+  drawCounter -= 2;
+}
+
+function forward() {
+  drawCounter += 1;
+}
+
+function endGame() {
+  drawCounter = shots.length;
 }
