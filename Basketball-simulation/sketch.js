@@ -6,6 +6,8 @@ let drawCounter = 0;
 let cleFinalScore;
 let gswFinalScore;
 let slider;
+let hideMade = false;
+let hideMissed = false;
 // var soundEffect;
 
 function preload() {
@@ -51,6 +53,19 @@ function setup() {
   var resetButton = createButton("end");
   resetButton.mousePressed(endGame);
 
+  // Made Shots Checkbox
+  document.write("<br>");
+  document.write("Filters: ");
+  let madeBox = createCheckbox('Made Shots', true);
+  madeBox.style('display', 'inline');
+  madeBox.changed(hideMadeShots);
+
+  // Missed Shots Checkbox
+  let missedBox = createCheckbox('Missed Shots', true);
+  missedBox.style('display', 'inline');
+  missedBox.changed(hideMissedShots);
+
+
   // Canvas Creation
   createCanvas(xMaxSize, yMaxSize);
   frameRate(slider.value());
@@ -93,16 +108,20 @@ function draw() {
   if (drawCounter >= 1) {
     shots[drawCounter - 1].updateCourt();
     for (i = 0; i < drawCounter; i++) {
+      if ((!(shots[i].shotStatus === "made" && hideMade === true)) && (!(shots[i].shotStatus === "missed" && hideMissed === true))) {
       shots[i].drawEllipses();
+      }
     }
   }
 
   // Draw new ellipse with line
   if (drawCounter <= (shots.length - 1)) {
+    if ((!(shots[drawCounter].shotStatus === "made" && hideMade === true)) && (!(shots[drawCounter].shotStatus === "missed" && hideMissed === true))) {
     shots[drawCounter].drawLines();
     shots[drawCounter].drawEllipses();
-    shots[drawCounter].updateScoreBoard();
     shots[drawCounter].drawPlayBoard();
+    }
+    shots[drawCounter].updateScoreBoard();
     // console.log("The drawCounter count: " + drawCounter);
     drawCounter++;
   } else {
@@ -178,7 +197,7 @@ class Shot {
 
   // Method to erase the previous lines
   updateCourt() {
-    strokeWeight(4);
+    strokeWeight(2);
     stroke(200, 200, 200, 255);
     if (this.shotTeam === "GSW") {
       line(this.xShotLocation, this.yShotLocation, 249, 963);
@@ -200,6 +219,14 @@ class Shot {
     } else {
       text(this.playDescription, 550, 200);
     }
+  }
+
+  get ShotStatus() {
+    return this.shotStatus;
+  }
+
+  set ShotStatus(shotStatus) {
+    this.shotStatus = shotStatus;
   }
 }
 
@@ -234,4 +261,12 @@ function forward() {
 
 function endGame() {
   drawCounter = shots.length;
+}
+
+function hideMadeShots() {
+  hideMade = !hideMade;
+}
+
+function hideMissedShots() {
+  hideMissed = !hideMissed;
 }
