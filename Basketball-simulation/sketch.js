@@ -8,7 +8,8 @@ let gswFinalScore;
 let slider;
 let hideMade = false;
 let hideMissed = false;
-// var soundEffect;
+let hideTwoPoints = false;
+let hideThreePoints = false;
 
 function preload() {
 
@@ -19,17 +20,21 @@ function preload() {
    */
 
   table = loadTable("nba_gsw_cle.csv", "csv", "header");
-  // soundEffect = loadSound("Swish.mp3");
 }
 
 function setup() {
+
+  /**
+   ************
+   * Playback buttons
+   ************
+   **/
+
   // Framerate slider
   document.write("Control framerate: ");
   slider = createSlider(0.25, 5, 0.25, 0.25);
 
-  // Playback buttons
-
-  // Reset
+  // Reset Game
   document.write(" | ");
   document.write("Reset Game: ");
   var resetButton = createButton("reset");
@@ -47,15 +52,23 @@ function setup() {
   var resetButton = createButton("forward");
   resetButton.mousePressed(forward);
 
-  // Forward
+  // End Game
   document.write(" | ");
   document.write("End Game: ");
   var resetButton = createButton("end");
   resetButton.mousePressed(endGame);
 
-  // Made Shots Checkbox
   document.write("<br>");
+
+  /**
+   ***********
+   * Filters
+   ***********
+   **/
+
   document.write("Filters: ");
+
+  // Made Shots Checkbox
   let madeBox = createCheckbox('Made Shots', true);
   madeBox.style('display', 'inline');
   madeBox.changed(hideMadeShots);
@@ -64,6 +77,18 @@ function setup() {
   let missedBox = createCheckbox('Missed Shots', true);
   missedBox.style('display', 'inline');
   missedBox.changed(hideMissedShots);
+
+  document.write(" | ");
+
+  // Two Pointer Checkbox
+  let twoPointsBox = createCheckbox('2 pointers', true);
+  twoPointsBox.style('display', 'inline');
+  twoPointsBox.changed(hideTwoPointers);
+
+  // Three Pointer Checkbox
+  let threePointsBox = createCheckbox('3 pointers', true);
+  threePointsBox.style('display', 'inline');
+  threePointsBox.changed(hideThreePointers);
 
 
   // Canvas Creation
@@ -82,7 +107,7 @@ function setup() {
   for (let i = 0; i < rowCount; i++) {
     if (table.getString(i, 8) === "shot" || table.getString(i, 8) === "miss") {
       console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
-      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17));
+      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10));
       counter++;
     }
     cleFinalScore = table.getNum(i, 2);
@@ -108,18 +133,28 @@ function draw() {
   if (drawCounter >= 1) {
     shots[drawCounter - 1].updateCourt();
     for (i = 0; i < drawCounter; i++) {
-      if ((!(shots[i].shotStatus === "made" && hideMade === true)) && (!(shots[i].shotStatus === "missed" && hideMissed === true))) {
-      shots[i].drawEllipses();
+      if (
+        (!(shots[i].shotStatus === "made" && hideMade === true)) &&
+        (!(shots[i].shotStatus === "missed" && hideMissed === true)) &&
+        (!(shots[i].playPoints === 2 && hideTwoPoints === true)) &&
+        (!(shots[i].playPoints === 3 && hideThreePoints === true))
+      ) {
+        shots[i].drawEllipses();
       }
     }
   }
 
   // Draw new ellipse with line
   if (drawCounter <= (shots.length - 1)) {
-    if ((!(shots[drawCounter].shotStatus === "made" && hideMade === true)) && (!(shots[drawCounter].shotStatus === "missed" && hideMissed === true))) {
-    shots[drawCounter].drawLines();
-    shots[drawCounter].drawEllipses();
-    shots[drawCounter].drawPlayBoard();
+    if (
+      (!(shots[drawCounter].shotStatus === "made" && hideMade === true)) &&
+      (!(shots[drawCounter].shotStatus === "missed" && hideMissed === true)) &&
+      (!(shots[drawCounter].playPoints === 2 && hideTwoPoints === true)) &&
+      (!(shots[drawCounter].playPoints === 3 && hideThreePoints === true))
+    ) {
+      shots[drawCounter].drawLines();
+      shots[drawCounter].drawEllipses();
+      shots[drawCounter].drawPlayBoard();
     }
     shots[drawCounter].updateScoreBoard();
     // console.log("The drawCounter count: " + drawCounter);
@@ -130,7 +165,7 @@ function draw() {
 }
 
 class Shot {
-  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription) {
+  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints) {
     this.shotX = shotX;
     this.shotY = shotY;
     this.shotTeam = shotTeam;
@@ -138,6 +173,8 @@ class Shot {
     this.gswScore = gswScore;
     this.cleScore = cleScore;
     this.playDescription = playDescription;
+    this.playPoints = playPoints;
+
     let xMap = map(this.shotX, 0, 50, 0, 501);
     // console.log("xMap: " + xMap);
     let yMap = map(this.shotY, 94, 0, 0, yMaxSize);
@@ -158,7 +195,6 @@ class Shot {
       stroke(255, 215, 0);
       if (this.shotStatus === "made") {
         fill(255, 215, 0);
-        // soundEffect.play();
       } else {
         fill(0);
       }
@@ -166,7 +202,6 @@ class Shot {
       stroke(255, 0, 0);
       if (this.shotStatus === "made") {
         fill(255, 0, 0);
-        // soundEffect.play();
       } else {
         fill(0);
       }
@@ -228,6 +263,14 @@ class Shot {
   set ShotStatus(shotStatus) {
     this.shotStatus = shotStatus;
   }
+
+  get PlayPoints() {
+    return this.playPoints;
+  }
+
+  set PlayPoints(playPoints) {
+    this.playPoints = playPoints;
+  }
 }
 
 function drawScoreBoard(cleScore, gswScore) {
@@ -269,4 +312,12 @@ function hideMadeShots() {
 
 function hideMissedShots() {
   hideMissed = !hideMissed;
+}
+
+function hideTwoPointers() {
+  hideTwoPoints = !hideTwoPoints;
+}
+
+function hideThreePointers() {
+  hideThreePoints = !hideThreePoints;
 }
