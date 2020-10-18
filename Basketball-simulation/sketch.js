@@ -10,6 +10,7 @@ let hideMade = false;
 let hideMissed = false;
 let hideTwoPoints = false;
 let hideThreePoints = false;
+let pause = false;
 
 function preload() {
 
@@ -32,31 +33,37 @@ function setup() {
 
   // Framerate slider
   document.write("Control framerate: ");
-  slider = createSlider(0.25, 5, 0.25, 0.25);
+  slider = createSlider(0.25, 5, 1.00, 0.25);
 
   // Reset Game
   document.write(" | ");
   document.write("Reset Game: ");
-  var resetButton = createButton("reset");
+  let resetButton = createButton("reset");
   resetButton.mousePressed(resetGame);
 
   // Back
   document.write(" | ");
   document.write("Back: ");
-  var resetButton = createButton("back");
-  resetButton.mousePressed(rewind);
+  let backButton = createButton("back");
+  backButton.mousePressed(rewind);
 
   // Forward
   document.write(" | ");
   document.write("Forward: ");
-  var resetButton = createButton("forward");
-  resetButton.mousePressed(forward);
+  let forwardButton = createButton("forward");
+  forwardButton.mousePressed(forward);
 
   // End Game
   document.write(" | ");
   document.write("End Game: ");
-  var resetButton = createButton("end");
-  resetButton.mousePressed(endGame);
+  let endButton = createButton("end");
+  endButton.mousePressed(endGame);
+
+  // Pause Game
+  document.write(" | ");
+  document.write("Pause: ");
+  let pauseButton = createButton("pause");
+  pauseButton.mousePressed(pauseGame);
 
   document.write("<br>");
 
@@ -131,7 +138,6 @@ function draw() {
 
   // Redraw every previous ellipse
   if (drawCounter >= 1) {
-    shots[drawCounter - 1].updateCourt();
     for (i = 0; i < drawCounter; i++) {
       if (
         (!(shots[i].shotStatus === "made" && hideMade === true)) &&
@@ -158,7 +164,9 @@ function draw() {
     }
     shots[drawCounter].updateScoreBoard();
     // console.log("The drawCounter count: " + drawCounter);
-    drawCounter++;
+    if (pause === false) {
+      drawCounter++;
+    }
   } else {
     drawScoreBoard(cleFinalScore, gswFinalScore);
   }
@@ -230,17 +238,6 @@ class Shot {
     }
   }
 
-  // Method to erase the previous lines
-  updateCourt() {
-    strokeWeight(2);
-    stroke(200, 200, 200, 255);
-    if (this.shotTeam === "GSW") {
-      line(this.xShotLocation, this.yShotLocation, 249, 963);
-    } else {
-      line(this.xShotLocation, this.yShotLocation, 249, 35);
-    }
-  }
-
   updateScoreBoard() {
     drawScoreBoard(this.cleScore, this.gswScore);
   }
@@ -295,11 +292,15 @@ function resetGame() {
 }
 
 function rewind() {
-  drawCounter -= 2;
+  if (drawCounter >= 1) {
+    drawCounter -= 1;
+  }
 }
 
 function forward() {
-  drawCounter += 1;
+  if (drawCounter < shots.length) {
+    drawCounter += 1;
+  }
 }
 
 function endGame() {
@@ -320,4 +321,8 @@ function hideTwoPointers() {
 
 function hideThreePointers() {
   hideThreePoints = !hideThreePoints;
+}
+
+function pauseGame() {
+  pause = !pause;
 }
