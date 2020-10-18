@@ -6,11 +6,19 @@ let drawCounter = 0;
 let cleFinalScore;
 let gswFinalScore;
 let slider;
+let pause = false;
+let firstQuarterStart;
+let secondQuarterStart;
+let thirdQuarterStart;
+let fourthQuarterStart;
 let hideMade = false;
 let hideMissed = false;
 let hideTwoPoints = false;
 let hideThreePoints = false;
-let pause = false;
+let hideFirstQuarter = false;
+let hideSecondQuarter = false;
+let hideThirdQuarter = false;
+let hideFourthQuarter = false;
 
 function preload() {
 
@@ -69,6 +77,32 @@ function setup() {
 
   /**
    ***********
+   * Jump to buttons
+   ***********
+   **/
+
+  document.write("Jump To: ");
+
+  // 1st Quarter Button
+  let firstQuarterButton = createButton("1st Quarter");
+  firstQuarterButton.mousePressed(jumpToFirstQuarter);
+
+  // 2nd Quarter Button
+  let secondQuarterButton = createButton("2nd Quarter");
+  secondQuarterButton.mousePressed(jumpToSecondQuarter);
+
+  // 3rd Quarter Button
+  let thirdQuarterButton = createButton("3rd Quarter");
+  thirdQuarterButton.mousePressed(jumpToThirdQuarter);
+
+  // 4th Quarter Button
+  let fourthQuarterButton = createButton("4th Quarter");
+  fourthQuarterButton.mousePressed(jumpToFourthQuarter);
+
+  document.write("<br>");
+
+  /**
+   ***********
    * Filters
    ***********
    **/
@@ -97,6 +131,27 @@ function setup() {
   threePointsBox.style('display', 'inline');
   threePointsBox.changed(hideThreePointers);
 
+  document.write(" | ");
+
+  // First Quarter Checkbox
+  let firstQuarterBox = createCheckbox('1st QTR', true);
+  firstQuarterBox.style('display', 'inline');
+  firstQuarterBox.changed(hideQuarterOne);
+
+  // Second Quarter Checkbox
+  let secondQuarterBox = createCheckbox('2nd QTR', true);
+  secondQuarterBox.style('display', 'inline');
+  secondQuarterBox.changed(hideQuarterTwo);
+
+  // Third Quarter Checkbox
+  let thirdQuarterBox = createCheckbox('3rd QTR', true);
+  thirdQuarterBox.style('display', 'inline');
+  thirdQuarterBox.changed(hideQuarterThree);
+
+  // Fourth Quarter Checkbox
+  let fourthQuarterBox = createCheckbox('4th QTR', true);
+  fourthQuarterBox.style('display', 'inline');
+  fourthQuarterBox.changed(hideQuarterFour);
 
   // Canvas Creation
   createCanvas(xMaxSize, yMaxSize);
@@ -111,10 +166,31 @@ function setup() {
 
   let rowCount = table.getRowCount();
   let counter = 0;
+  let quarter = 1;
   for (let i = 0; i < rowCount; i++) {
     if (table.getString(i, 8) === "shot" || table.getString(i, 8) === "miss") {
+      if (quarter === table.getNum(i, 0)) {
+        switch (quarter) {
+          case 1:
+            firstQuarterStart = counter;
+            quarter++;
+            break;
+          case 2:
+            secondQuarterStart = counter;
+            quarter++;
+            break;
+          case 3:
+            thirdQuarterStart = counter;
+            quarter++;
+            break;
+          case 4:
+            fourthQuarterStart = counter;
+            quarter++;
+            break;
+        }
+      }
       console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
-      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10));
+      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10), table.getNum(i, 0));
       counter++;
     }
     cleFinalScore = table.getNum(i, 2);
@@ -143,7 +219,11 @@ function draw() {
         (!(shots[i].shotStatus === "made" && hideMade === true)) &&
         (!(shots[i].shotStatus === "missed" && hideMissed === true)) &&
         (!(shots[i].playPoints === 2 && hideTwoPoints === true)) &&
-        (!(shots[i].playPoints === 3 && hideThreePoints === true))
+        (!(shots[i].playPoints === 3 && hideThreePoints === true)) &&
+        (!(shots[i].playQuarter === 1 && hideFirstQuarter === true)) &&
+        (!(shots[i].playQuarter === 2 && hideSecondQuarter === true)) &&
+        (!(shots[i].playQuarter === 3 && hideThirdQuarter === true)) &&
+        (!(shots[i].playQuarter === 4 && hideFourthQuarter === true))
       ) {
         shots[i].drawEllipses();
       }
@@ -156,7 +236,11 @@ function draw() {
       (!(shots[drawCounter].shotStatus === "made" && hideMade === true)) &&
       (!(shots[drawCounter].shotStatus === "missed" && hideMissed === true)) &&
       (!(shots[drawCounter].playPoints === 2 && hideTwoPoints === true)) &&
-      (!(shots[drawCounter].playPoints === 3 && hideThreePoints === true))
+      (!(shots[drawCounter].playPoints === 3 && hideThreePoints === true)) &&
+      (!(shots[drawCounter].playQuarter === 1 && hideFirstQuarter === true)) &&
+      (!(shots[drawCounter].playQuarter === 2 && hideSecondQuarter === true)) &&
+      (!(shots[drawCounter].playQuarter === 3 && hideThirdQuarter === true)) &&
+      (!(shots[drawCounter].playQuarter === 4 && hideFourthQuarter === true))
     ) {
       shots[drawCounter].drawLines();
       shots[drawCounter].drawEllipses();
@@ -168,12 +252,12 @@ function draw() {
       drawCounter++;
     }
   } else {
-    drawScoreBoard(cleFinalScore, gswFinalScore);
+    drawScoreBoard(cleFinalScore, gswFinalScore, 'Final');
   }
 }
 
 class Shot {
-  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints) {
+  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints, playQuarter) {
     this.shotX = shotX;
     this.shotY = shotY;
     this.shotTeam = shotTeam;
@@ -182,6 +266,7 @@ class Shot {
     this.cleScore = cleScore;
     this.playDescription = playDescription;
     this.playPoints = playPoints;
+    this.playQuarter = playQuarter;
 
     let xMap = map(this.shotX, 0, 50, 0, 501);
     // console.log("xMap: " + xMap);
@@ -239,7 +324,7 @@ class Shot {
   }
 
   updateScoreBoard() {
-    drawScoreBoard(this.cleScore, this.gswScore);
+    drawScoreBoard(this.cleScore, this.gswScore, this.playQuarter);
   }
 
   drawPlayBoard() {
@@ -270,7 +355,7 @@ class Shot {
   }
 }
 
-function drawScoreBoard(cleScore, gswScore) {
+function drawScoreBoard(cleScore, gswScore, playQuarter) {
   textSize(50);
   stroke(255, 0, 0);
   fill(255, 0, 0);
@@ -285,6 +370,8 @@ function drawScoreBoard(cleScore, gswScore) {
   fill(0);
   text(cleScore, 550, 550);
   text(gswScore, 800, 550);
+  textSize(30);
+  text('QTR: ' + playQuarter, 680, 600);
 }
 
 function resetGame() {
@@ -307,6 +394,26 @@ function endGame() {
   drawCounter = shots.length;
 }
 
+function pauseGame() {
+  pause = !pause;
+}
+
+function jumpToFirstQuarter() {
+  drawCounter = firstQuarterStart;
+}
+
+function jumpToSecondQuarter() {
+  drawCounter = secondQuarterStart;
+}
+
+function jumpToThirdQuarter() {
+  drawCounter = thirdQuarterStart;
+}
+
+function jumpToFourthQuarter() {
+  drawCounter = fourthQuarterStart;
+}
+
 function hideMadeShots() {
   hideMade = !hideMade;
 }
@@ -323,6 +430,18 @@ function hideThreePointers() {
   hideThreePoints = !hideThreePoints;
 }
 
-function pauseGame() {
-  pause = !pause;
+function hideQuarterOne() {
+  hideFirstQuarter = !hideFirstQuarter;
+}
+
+function hideQuarterTwo() {
+  hideSecondQuarter = !hideSecondQuarter;
+}
+
+function hideQuarterThree() {
+  hideThirdQuarter = !hideThirdQuarter;
+}
+
+function hideQuarterFour() {
+  hideFourthQuarter = !hideFourthQuarter;
 }
