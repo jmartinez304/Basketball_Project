@@ -1,5 +1,5 @@
 let csvLines;
-let xMaxSize = 1501;
+let xMaxSize = 2870;
 let yMaxSize = 1001;
 let shots = [];
 let drawCounter = 0;
@@ -19,6 +19,8 @@ let hideFirstQuarter = false;
 let hideSecondQuarter = false;
 let hideThirdQuarter = false;
 let hideFourthQuarter = false;
+let scoreboardXEnd = 1251;
+let graphXStart = 1252;
 
 function preload() {
 
@@ -162,7 +164,8 @@ function setup() {
   circle(249, 35, 20);
   circle(249, 963, 20);
   fill(255);
-  rect(502, 0, xMaxSize, yMaxSize)
+  rect(502, 0, scoreboardXEnd, yMaxSize);
+  rect(graphXStart, 0, xMaxSize, yMaxSize);
 
   let rowCount = table.getRowCount();
   let counter = 0;
@@ -190,12 +193,84 @@ function setup() {
         }
       }
       console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
-      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10), table.getNum(i, 0));
+      shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10), table.getNum(i, 0), table.getString(i, 3));
+      if (table.getString(i, 11) === "made") {
+        if (table.getString(i, 7) === "GSW") {
+          gswTimeElapsed.push(hmsToSecondsOnly(table.getString(i, 4), table.getNum(i, 0)));
+          gswPoints.push(table.getNum(i, 1));
+        } else {
+          cleTimeElapsed.push(hmsToSecondsOnly(table.getString(i, 4), table.getNum(i, 0)));
+          clePoints.push(table.getNum(i, 2));
+        }
+      }
       counter++;
     }
     cleFinalScore = table.getNum(i, 2);
     gswFinalScore = table.getNum(i, 1);
   }
+
+  /** Passing Values for graph **/
+
+  gswTimeElapsed.push("2880");
+  cleTimeElapsed.push("2880");
+  gswPoints.push(gswFinalScore);
+  clePoints.push(cleFinalScore);
+  gswNumRows = gswTimeElapsed.length;
+  gswNumColumns = gswPoints.length;
+  cleNumRows = cleTimeElapsed.length;
+  cleNumColumns = clePoints.length;
+  let cutOffIncrement = 275;
+  let cutOffValue = cutOffIncrement;
+  for (let i = 0; i < gswNumRows; i++) {
+    if (gswTimeElapsed[i] > cutOffValue) {
+      gswTimeElapsed2.push(gswTimeElapsed[i - 1]);
+      gswPoints2.push(gswPoints[i - 1]);
+      graphTimeValues.push(cutOffValue);
+      cutOffValue += cutOffIncrement;
+    }
+  }
+
+  cutOffValue = cutOffIncrement;
+
+  for (let i = 0; i < cleNumRows; i++) {
+    if (cleTimeElapsed[i] > cutOffValue) {
+      cleTimeElapsed2.push(cleTimeElapsed[i - 1]);
+      clePoints2.push(clePoints[i - 1]);
+      cutOffValue += cutOffIncrement;
+    }
+  }
+
+  gswTimeElapsed2.push(2880);
+  cleTimeElapsed2.push(2880);
+  graphTimeValues.push(2880);
+  gswPoints2.push(gswFinalScore);
+  clePoints2.push(cleFinalScore);
+
+  gswTimeElapsed = gswTimeElapsed2;
+  cleTimeElapsed = cleTimeElapsed2;
+  gswPoints = gswPoints2;
+  clePoints = clePoints2;
+  gswNumRows = gswTimeElapsed.length;
+  gswNumColumns = gswPoints.length;
+  cleNumRows = cleTimeElapsed.length;
+  cleNumColumns = clePoints.length;
+
+
+  cleColors = [
+    color(255, 0, 0),
+    color(255, 0, 0),
+    color(255, 0, 0),
+    color(255, 0, 0)
+  ]
+
+  gswColors = [
+    color(255, 215, 0),
+    color(255, 215, 0),
+    color(255, 215, 0),
+    color(255, 215, 0)
+  ]
+
+  /** End of passing values for graph **/
 }
 
 function draw() {
@@ -210,11 +285,12 @@ function draw() {
   circle(249, 35, 20);
   circle(249, 963, 20);
   fill(255);
-  rect(502, 0, xMaxSize, yMaxSize)
+  rect(502, 0, scoreboardXEnd, yMaxSize);
+  rect(graphXStart, 0, xMaxSize, yMaxSize);
 
   // Redraw every previous ellipse
   if (drawCounter >= 1) {
-    for (i = 0; i < drawCounter; i++) {
+    for (let i = 0; i < drawCounter; i++) {
       if (
         (!(shots[i].shotStatus === "made" && hideMade === true)) &&
         (!(shots[i].shotStatus === "missed" && hideMissed === true)) &&
@@ -254,10 +330,11 @@ function draw() {
   } else {
     drawScoreBoard(cleFinalScore, gswFinalScore, 'Final');
   }
+  drawGraph();
 }
 
 class Shot {
-  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints, playQuarter) {
+  constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints, playQuarter, timeRemaining) {
     this.shotX = shotX;
     this.shotY = shotY;
     this.shotTeam = shotTeam;
@@ -267,6 +344,7 @@ class Shot {
     this.playDescription = playDescription;
     this.playPoints = playPoints;
     this.playQuarter = playQuarter;
+    this.timeRemaining = timeRemaining;
 
     let xMap = map(this.shotX, 0, 50, 0, 501);
     // console.log("xMap: " + xMap);
@@ -324,7 +402,7 @@ class Shot {
   }
 
   updateScoreBoard() {
-    drawScoreBoard(this.cleScore, this.gswScore, this.playQuarter);
+    drawScoreBoard(this.cleScore, this.gswScore, this.playQuarter, this.timeRemaining);
   }
 
   drawPlayBoard() {
@@ -355,7 +433,7 @@ class Shot {
   }
 }
 
-function drawScoreBoard(cleScore, gswScore, playQuarter) {
+function drawScoreBoard(cleScore, gswScore, playQuarter, timeRemaining) {
   textSize(50);
   stroke(255, 0, 0);
   fill(255, 0, 0);
@@ -372,6 +450,7 @@ function drawScoreBoard(cleScore, gswScore, playQuarter) {
   text(gswScore, 800, 550);
   textSize(30);
   text('QTR: ' + playQuarter, 680, 600);
+  text(timeRemaining, 680, 650);
 }
 
 function resetGame() {
@@ -444,4 +523,17 @@ function hideQuarterThree() {
 
 function hideQuarterFour() {
   hideFourthQuarter = !hideFourthQuarter;
+}
+
+function hmsToSecondsOnly(str, quarter) {
+  let p = str.split(':'),
+    s = 0,
+    m = 1;
+
+  while (p.length > 0) {
+    s += m * parseInt(p.pop(), 10);
+    m *= 60;
+  }
+
+  return s + ((quarter - 1) * 720);
 }
