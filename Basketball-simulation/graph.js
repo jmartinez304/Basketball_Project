@@ -24,6 +24,7 @@ let xAxisX = [];
 let xAxisY = [];
 let xAxisStr = [];
 
+// Graph canvas settings
 let GRAPH_ORIGINX = 1290;
 let GRAPH_ORIGINY = 70;
 let GRAPHH = 900;
@@ -55,18 +56,14 @@ function drawAxes() {
   fill(300); // This is a test measure to get rid of the black triangle in graph
   endShape();
 
-  // drawArrows();
+  drawArrows();
   drawHashMarks();
 }
 
 function drawArrows() {
   fill(51);
-  // arrow for y axis
-  beginShape(TRIANGLES);
-  vertex(GRAPH_ORIGINX, GRAPH_ORIGINY);
-  vertex(GRAPH_ORIGINX - ARROWW, GRAPH_ORIGINY + ARROWL);
-  vertex(GRAPH_ORIGINX + ARROWW, GRAPH_ORIGINY + ARROWL);
-  endShape();
+  line(GRAPH_ORIGINX, GRAPH_ORIGINY, GRAPH_ORIGINX, GRAPH_ORIGINY - 25);
+  triangle(GRAPH_ORIGINX - 5, GRAPH_ORIGINY - 25, GRAPH_ORIGINX, GRAPH_ORIGINY - 40, GRAPH_ORIGINX + 5, GRAPH_ORIGINY - 25);
 
   // arrow for x axis
   beginShape(TRIANGLES);
@@ -94,8 +91,6 @@ function drawHashMarksForYAxes() {
       line(hashMarkL, hashMarkY, hashMarkR, hashMarkY);
     }
   }
-  // attribute name for y axis
-  // drawTextForYHashMarkAtY(GRAPH_ORIGINY, hashMarkR, "rating");
 }
 
 function drawHashMarksForXAxes() {
@@ -104,15 +99,12 @@ function drawHashMarksForXAxes() {
   let unitDist = dist / numHashMarks;
   let startX = GRAPH_ORIGINX + PADDINGX;
   let hashMarkB = GRAPH_ORIGINY + GRAPHH - 1;
-  let hashMarkU = hashMarkB - HASHMARKL;
-  fill(0);
   for (let i = 0; i < numHashMarks; ++i) {
     let hashMarkX = startX + (i * unitDist);
 
     if (i % 2 == 0) {
       stroke(51);
       line(hashMarkX, hashMarkB + HASHMARKL, hashMarkX, hashMarkB);
-      // console.log(hashMarkX + " " + (hashMarkB + HASHMARKL) + " " + hashMarkX + " " + hashMarkB);
       push();
       let x = hashMarkX;
       let y = hashMarkB + 5;
@@ -123,8 +115,6 @@ function drawHashMarksForXAxes() {
       xAxisY.push(y);
       xAxisStr.push(stringTest);
       console.log(graphTimeValues[i].toString());
-      // drawTextForXHashMark(x, y, stringTest); // This for loop is cursed
-
       pop();
     }
   }
@@ -145,21 +135,16 @@ function drawTextForYHashMarkAtY(hashMarkY, hashMarkL, str) {
   let x = hashMarkL - padding - len;
   let y = hashMarkY - height / 2;
 
-  fill(0);
-  // textAlign(RIGHT);
+  fill(50);
   textSize(23);
   text(str, x - 15, y + 12);
-  text("points", GRAPH_ORIGINX - 30, GRAPH_ORIGINY - 40)
+  text("points", GRAPH_ORIGINX - 35, GRAPH_ORIGINY - 50)
 }
 
 function drawTextForXHashMark(x, y, str) {
-  let len = str.length * 10;
-  let height = 15;
-  // text(str, x, y, len, height);
-  // stroke(50);
+  fill(50);
   textSize(23);
   text(str, x, y);
-  console.log("Xstr: " + str + " x: " + x + " y: " + y);
 }
 
 function drawGSWPoints() {
@@ -291,23 +276,13 @@ function drawLegends() {
 
     fill(51);
     textSize(16);
-    // // textAlign(LEFT);
-    // let str = "=  Q" + (i+1).toString();
-    // let textLen = textWidth(text);
-    // text(str, originX + boxL + textPadding, curY, textLen, boxL);
     text("GSW", originX + 20, curY + 15);
     text("CLE", originX + 20, curY + 40);
   }
 }
 
 function drawTitle() {
-  let textLen = textWidth(title);
-  let padding = (GRAPHW - textLen) / 2;
-
   fill(125);
-  // textAlign(CENTER);
-  // textStyle(BOLD);
   textSize(25);
-  // text(title, GRAPH_ORIGINX + padding, GRAPH_ORIGINY, textLen + 50, 20);
   text(title, 2075, 50);
 }

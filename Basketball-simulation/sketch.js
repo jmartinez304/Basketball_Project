@@ -167,6 +167,7 @@ function setup() {
   rect(502, 0, scoreboardXEnd, yMaxSize);
   rect(graphXStart, 0, xMaxSize, yMaxSize);
 
+  // Filtering the CSV list in order to get shots and misses
   let rowCount = table.getRowCount();
   let counter = 0;
   let quarter = 1;
@@ -194,6 +195,8 @@ function setup() {
       }
       console.log(table.getNum(i, 1) + ", " + table.getNum(i, 2) + ", " + table.getNum(i, 15) + ", " + table.getNum(i, 16) + ", " + table.getString(i, 7) + ", " + table.getString(i, 11));
       shots[counter] = new Shot(table.getNum(i, 15), table.getNum(i, 16), table.getString(i, 7), table.getString(i, 11), table.getNum(i, 1), table.getNum(i, 2), table.getString(i, 17), table.getNum(i, 10), table.getNum(i, 0), table.getString(i, 3));
+
+      // Getting shots and times for graph
       if (table.getString(i, 11) === "made") {
         if (table.getString(i, 7) === "GSW") {
           gswTimeElapsed.push(hmsToSecondsOnly(table.getString(i, 4), table.getNum(i, 0)));
@@ -333,6 +336,7 @@ function draw() {
   drawGraph();
 }
 
+// Shot object class. We use it to synch each shot with its specific information.
 class Shot {
   constructor(shotX, shotY, shotTeam, shotStatus, gswScore, cleScore, playDescription, playPoints, playQuarter, timeRemaining) {
     this.shotX = shotX;
@@ -347,9 +351,7 @@ class Shot {
     this.timeRemaining = timeRemaining;
 
     let xMap = map(this.shotX, 0, 50, 0, 501);
-    // console.log("xMap: " + xMap);
     let yMap = map(this.shotY, 94, 0, 0, yMaxSize);
-    // console.log("yMap: " + yMap);
 
     // Process to change float numbers to integer
     this.xShotLocation = Math.floor(xMap);
@@ -378,7 +380,6 @@ class Shot {
       }
     }
     ellipse(this.xShotLocation, this.yShotLocation, 10, 10);
-    // console.log("Ellipse X: " + this.xShotLocation + ", Ellipse Y: " + this.yShotLocation);
   }
 
   drawLines() {
@@ -525,6 +526,7 @@ function hideQuarterFour() {
   hideFourthQuarter = !hideFourthQuarter;
 }
 
+// function to change time format from 00:00:00 to seconds
 function hmsToSecondsOnly(str, quarter) {
   let p = str.split(':'),
     s = 0,
